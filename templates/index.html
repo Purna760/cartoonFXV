@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CartoonFX - Professional Video to Cartoon Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'gradient': 'gradient 8s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        gradient: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #667eea 100%);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .glass-dark {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .upload-zone {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .upload-zone:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+        .upload-zone.dragging {
+            transform: scale(1.02);
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spinning {
+            animation: spin 1s linear infinite;
+        }
+        .progress-bar {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .style-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .style-card:hover {
+            transform: translateY(-6px) scale(1.02);
+        }
+        .style-card.selected {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 20px 40px -15px rgba(102, 126, 234, 0.4);
+        }
+        .style-card.selected .style-check {
+            display: flex;
+        }
+        .style-check {
+            display: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(102, 126, 234, 0.6);
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .border-gradient {
+            background: linear-gradient(white, white) padding-box,
+                        linear-gradient(135deg, #667eea, #764ba2, #f093fb) border-box;
+            border: 2px solid transparent;
+        }
+        .pattern-bg {
+            background-image: radial-gradient(circle at 1px 1px, rgba(102, 126, 234, 0.1) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <header class="fixed w-full top-0 z-50 glass border-b border-gray-200/50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Cartoon<span class="text-gradient">FX</span></h1>
+                        <p class="text-xs text-gray-500">Video Transformation Studio</p>
+                    </div>
+                </div>
+                <nav class="hidden md:flex items-center gap-8">
+                    <a href="#features" class="text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">Features</a>
+                    <a href="#how-it-works" class="text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">How It Works</a>
+                    <a href="#about" class="text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">About</a>
+                </nav>
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg id="menu-icon" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                    <svg id="close-icon" class="w-6 h-6 text-gray-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200/50">
+            <nav class="px-6 py-4 space-y-3">
+                <a href="#features" class="mobile-nav-link block py-2 px-4 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-medium">Features</a>
+                <a href="#how-it-works" class="mobile-nav-link block py-2 px-4 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-medium">How It Works</a>
+                <a href="#about" class="mobile-nav-link block py-2 px-4 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all font-medium">About</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="pt-28 pb-16 relative overflow-hidden">
+            <div class="absolute inset-0 pattern-bg"></div>
+            <div class="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+            <div class="absolute top-40 right-10 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" style="animation-delay: 2s;"></div>
+            <div class="absolute bottom-10 left-1/2 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" style="animation-delay: 4s;"></div>
+            
+            <div class="max-w-7xl mx-auto px-6 relative z-10">
+                <div class="text-center mb-12">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-medium mb-6">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        8 Professional Filter Styles
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+                        Transform Videos into
+                        <span class="text-gradient block md:inline"> Stunning Cartoons</span>
+                    </h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Professional-grade video transformation with AI-powered filters. Upload your video and watch it transform into beautiful cartoon art.
+                    </p>
+                </div>
+
+                <div id="upload-section" class="mb-12">
+                    <div class="upload-zone glass border-2 border-dashed border-gray-300 rounded-3xl p-12 md:p-16 text-center cursor-pointer max-w-3xl mx-auto shadow-xl hover:border-purple-400">
+                        <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800 mb-2">Drop your video here</p>
+                        <p class="text-gray-500 mb-6">or click to browse your files</p>
+                        <div class="flex flex-wrap justify-center gap-3">
+                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm font-medium">MP4</span>
+                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm font-medium">AVI</span>
+                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm font-medium">MOV</span>
+                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm font-medium">MKV</span>
+                            <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-sm font-medium">Up to 500MB</span>
+                        </div>
+                        <input type="file" id="video-input" accept="video/*" class="hidden">
+                    </div>
+                </div>
+
+                <div id="style-section" class="hidden mb-12">
+                    <div class="glass rounded-3xl shadow-2xl p-8 md:p-12 max-w-6xl mx-auto border border-gray-200/50">
+                        <div class="text-center mb-10">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-2">Choose Your Style</h2>
+                            <p class="text-gray-600">Select from 8 professional cartoon transformation styles</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
+                            {% for key, style in styles.items() %}
+                            <div class="style-card bg-white border-2 border-gray-100 rounded-2xl p-4 md:p-6 relative cursor-pointer shadow-lg hover:shadow-xl {% if loop.first %}selected border-purple-500{% endif %}" data-style="{{ key }}">
+                                <div class="style-check absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-purple-600 to-pink-500 rounded-full items-center justify-center shadow-lg">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div class="w-full aspect-square rounded-xl mb-4 flex items-center justify-center bg-gradient-to-br {{ style.gradient }} shadow-lg">
+                                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        {% if style.icon == 'lightning' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                        {% elif style.icon == 'heart' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                        {% elif style.icon == 'pencil' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                        {% elif style.icon == 'sparkles' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                        {% elif style.icon == 'paintbrush' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                                        {% elif style.icon == 'video' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                        {% elif style.icon == 'star' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                        {% elif style.icon == 'brush' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        {% endif %}
+                                    </svg>
+                                </div>
+                                <p class="font-bold text-gray-900 text-center mb-1">{{ style.name }}</p>
+                                <p class="text-xs text-gray-500 text-center leading-tight">{{ style.description }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button id="back-btn" class="px-8 py-4 border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all">
+                                <svg class="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                Back
+                            </button>
+                            <button id="convert-btn" class="btn-primary px-10 py-4 text-white font-bold rounded-xl text-lg shadow-lg">
+                                <svg class="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Transform Video
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="processing-section" class="hidden mb-12">
+                    <div class="glass rounded-3xl shadow-2xl p-8 md:p-12 max-w-2xl mx-auto border border-gray-200/50">
+                        <div class="text-center mb-8">
+                            <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                                <svg class="spinning w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Transforming Your Video</h3>
+                            <p class="text-gray-600" id="status-text">Uploading video...</p>
+                        </div>
+                        
+                        <div class="bg-gray-100 rounded-xl p-4 mb-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 flex-shrink-0 rounded-xl bg-purple-100 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0 overflow-hidden">
+                                    <p class="font-semibold text-gray-900 truncate" id="filename-display"></p>
+                                    <p class="text-sm text-gray-500" id="filesize-display"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div class="progress-bar bg-gradient-to-r from-purple-600 to-pink-500 h-3 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="preview-section" class="hidden mb-12">
+                    <div class="glass rounded-3xl shadow-2xl p-8 md:p-12 max-w-6xl mx-auto border border-gray-200/50">
+                        <div class="text-center mb-10">
+                            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-medium mb-4">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Transformation Complete
+                            </div>
+                            <h2 class="text-3xl font-bold text-gray-900 mb-2">Your Cartoon Video is Ready</h2>
+                            <p class="text-gray-600">Compare the original with your new cartoon transformation</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-gray-50 rounded-2xl p-6">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <div class="w-3 h-3 rounded-full bg-gray-400"></div>
+                                    <p class="text-sm font-semibold text-gray-600">Original Video</p>
+                                </div>
+                                <video id="original-video" controls class="w-full rounded-xl aspect-video bg-black shadow-lg"></video>
+                                <p class="text-xs text-gray-500 mt-3 text-center" id="original-info"></p>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <div class="w-3 h-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-500"></div>
+                                    <p class="text-sm font-semibold text-purple-700">Cartoon Video</p>
+                                </div>
+                                <video id="cartoon-video" controls class="w-full rounded-xl aspect-video bg-black shadow-lg"></video>
+                                <p class="text-xs text-purple-600 mt-3 text-center font-medium" id="cartoon-info"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="download-section" class="hidden text-center mb-12">
+                    <button id="download-btn" class="btn-primary text-white font-bold px-10 py-5 rounded-xl text-lg shadow-xl w-full md:w-auto">
+                        <svg class="inline-block w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Download Cartoon Video
+                    </button>
+                    <div class="mt-6">
+                        <button id="convert-another-btn" class="text-purple-600 hover:text-purple-700 font-semibold text-sm inline-flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Convert Another Video
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">8 Professional Styles</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">From classic cartoon effects to cutting-edge anime transformations</p>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {% for key, style in styles.items() %}
+                    <div class="feature-card bg-gray-50 rounded-2xl p-6 text-center hover:shadow-xl">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br {{ style.gradient }} flex items-center justify-center shadow-lg">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {% if style.icon == 'lightning' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                {% elif style.icon == 'heart' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                {% elif style.icon == 'pencil' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                {% elif style.icon == 'sparkles' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                {% elif style.icon == 'paintbrush' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                                {% elif style.icon == 'video' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                {% elif style.icon == 'star' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                {% elif style.icon == 'brush' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-1">{{ style.name }}</h3>
+                        <p class="text-sm text-gray-500">{{ style.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="py-20 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">Transform your videos in three simple steps</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="relative">
+                        <div class="bg-white rounded-3xl p-8 shadow-xl text-center relative z-10">
+                            <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                            </div>
+                            <div class="absolute -top-3 -left-3 w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center text-lg shadow-lg">1</div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-3">Upload Video</h3>
+                            <p class="text-gray-600">Drag and drop or click to select your video file. We support MP4, AVI, MOV, and MKV formats.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <div class="bg-white rounded-3xl p-8 shadow-xl text-center relative z-10">
+                            <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                                </svg>
+                            </div>
+                            <div class="absolute -top-3 -left-3 w-10 h-10 rounded-full bg-pink-500 text-white font-bold flex items-center justify-center text-lg shadow-lg">2</div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-3">Choose Style</h3>
+                            <p class="text-gray-600">Select from 8 unique cartoon styles including AnimeGAN, Oil Painting, Comic Book, and more.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <div class="bg-white rounded-3xl p-8 shadow-xl text-center relative z-10">
+                            <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                            </div>
+                            <div class="absolute -top-3 -left-3 w-10 h-10 rounded-full bg-orange-500 text-white font-bold flex items-center justify-center text-lg shadow-lg">3</div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-3">Download</h3>
+                            <p class="text-gray-600">Preview your transformed video side-by-side and download it instantly in high quality.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="py-20 bg-white">
+            <div class="max-w-4xl mx-auto px-6 text-center">
+                <div class="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">About CartoonFX</h2>
+                <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                    CartoonFX uses advanced image processing algorithms powered by OpenCV to transform your videos into stunning cartoon animations. Our technology applies sophisticated filters including bilateral filtering, edge detection, and color quantization to create professional-quality cartoon effects while preserving your video's original resolution and frame rate.
+                </p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
+                    <div class="bg-purple-50 rounded-2xl p-6">
+                        <p class="text-3xl font-bold text-purple-600 mb-2">8</p>
+                        <p class="text-sm text-gray-600">Filter Styles</p>
+                    </div>
+                    <div class="bg-pink-50 rounded-2xl p-6">
+                        <p class="text-3xl font-bold text-pink-600 mb-2">500MB</p>
+                        <p class="text-sm text-gray-600">Max File Size</p>
+                    </div>
+                    <div class="bg-blue-50 rounded-2xl p-6">
+                        <p class="text-3xl font-bold text-blue-600 mb-2">HD</p>
+                        <p class="text-sm text-gray-600">Quality Output</p>
+                    </div>
+                    <div class="bg-green-50 rounded-2xl p-6">
+                        <p class="text-3xl font-bold text-green-600 mb-2">Free</p>
+                        <p class="text-sm text-gray-600">No Signup</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-bold">CartoonFX</h3>
+                        <p class="text-xs text-gray-400">Video Transformation Studio</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-8 text-sm text-gray-400">
+                    <a href="/privacy" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="/terms" class="hover:text-white transition-colors">Terms of Service</a>
+                    <a href="/contact" class="hover:text-white transition-colors">Contact</a>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
+                <p>&copy; 2025 CartoonFX. All rights reserved. Powered by OpenCV.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        const closeIcon = document.getElementById('close-icon');
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            menuIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        });
+
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                menuIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+            });
+        });
+
+        const uploadZone = document.querySelector('.upload-zone');
+        const videoInput = document.getElementById('video-input');
+        const uploadSection = document.getElementById('upload-section');
+        const styleSection = document.getElementById('style-section');
+        const processingSection = document.getElementById('processing-section');
+        const previewSection = document.getElementById('preview-section');
+        const downloadSection = document.getElementById('download-section');
+        const filenameDisplay = document.getElementById('filename-display');
+        const filesizeDisplay = document.getElementById('filesize-display');
+        const statusText = document.getElementById('status-text');
+        const progressBar = document.querySelector('.progress-bar');
+        const downloadBtn = document.getElementById('download-btn');
+        const convertAnotherBtn = document.getElementById('convert-another-btn');
+        const originalVideo = document.getElementById('original-video');
+        const cartoonVideo = document.getElementById('cartoon-video');
+        const backBtn = document.getElementById('back-btn');
+        const convertBtn = document.getElementById('convert-btn');
+        const styleCards = document.querySelectorAll('.style-card');
+
+        let currentDownloadUrl = '';
+        let currentFile = null;
+        let selectedStyle = 'comic';
+
+        uploadZone.addEventListener('click', () => videoInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragging');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragging');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragging');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                showStyleSelection(files[0]);
+            }
+        });
+
+        videoInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                showStyleSelection(e.target.files[0]);
+            }
+        });
+
+        styleCards.forEach(card => {
+            card.addEventListener('click', () => {
+                styleCards.forEach(c => {
+                    c.classList.remove('selected');
+                    c.classList.remove('border-purple-500');
+                });
+                card.classList.add('selected');
+                card.classList.add('border-purple-500');
+                selectedStyle = card.dataset.style;
+            });
+        });
+
+        backBtn.addEventListener('click', () => {
+            styleSection.classList.add('hidden');
+            uploadSection.classList.remove('hidden');
+            currentFile = null;
+            videoInput.value = '';
+        });
+
+        convertBtn.addEventListener('click', () => {
+            if (currentFile) {
+                processFile(currentFile, selectedStyle);
+            }
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        function showStyleSelection(file) {
+            currentFile = file;
+            uploadSection.classList.add('hidden');
+            styleSection.classList.remove('hidden');
+        }
+
+        async function processFile(file, style) {
+            filenameDisplay.textContent = file.name;
+            filesizeDisplay.textContent = formatFileSize(file.size);
+
+            styleSection.classList.add('hidden');
+            processingSection.classList.remove('hidden');
+            progressBar.style.width = '30%';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                statusText.textContent = 'Uploading video...';
+                const uploadResponse = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) {
+                    const error = await uploadResponse.json();
+                    throw new Error(error.error || 'Upload failed');
+                }
+
+                const uploadData = await uploadResponse.json();
+                progressBar.style.width = '60%';
+                
+                const styleName = document.querySelector(`.style-card[data-style="${style}"] p.font-bold`).textContent;
+                statusText.textContent = `Applying ${styleName} style...`;
+
+                const processResponse = await fetch(`/process/${uploadData.unique_id}/${uploadData.filename}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ style: style })
+                });
+
+                if (!processResponse.ok) {
+                    const error = await processResponse.json();
+                    throw new Error(error.error || 'Processing failed');
+                }
+
+                const processData = await processResponse.json();
+                progressBar.style.width = '100%';
+                statusText.textContent = 'Complete!';
+
+                setTimeout(() => {
+                    processingSection.classList.add('hidden');
+                    previewSection.classList.remove('hidden');
+                    downloadSection.classList.remove('hidden');
+
+                    originalVideo.src = processData.original_video;
+                    cartoonVideo.src = processData.cartoon_video;
+                    
+                    const info = processData.video_info;
+                    document.getElementById('original-info').textContent = `${info.width}x${info.height} • ${info.fps} FPS`;
+                    document.getElementById('cartoon-info').textContent = `${info.width}x${info.height} • ${info.fps} FPS • ${styleName}`;
+
+                    currentDownloadUrl = `/download/${processData.output_filename}`;
+                    downloadBtn.innerHTML = `
+                        <svg class="inline-block w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Download ${styleName} Video
+                    `;
+                }, 1000);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                resetUI();
+            }
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            if (currentDownloadUrl) {
+                window.location.href = currentDownloadUrl;
+            }
+        });
+
+        convertAnotherBtn.addEventListener('click', resetUI);
+
+        function resetUI() {
+            uploadSection.classList.remove('hidden');
+            styleSection.classList.add('hidden');
+            processingSection.classList.add('hidden');
+            previewSection.classList.add('hidden');
+            downloadSection.classList.add('hidden');
+            progressBar.style.width = '0%';
+            videoInput.value = '';
+            currentDownloadUrl = '';
+            currentFile = null;
+            selectedStyle = 'comic';
+            styleCards.forEach(c => {
+                c.classList.remove('selected');
+                c.classList.remove('border-purple-500');
+            });
+            styleCards[0].classList.add('selected');
+            styleCards[0].classList.add('border-purple-500');
+        }
+    </script>
+</body>
+</html>
